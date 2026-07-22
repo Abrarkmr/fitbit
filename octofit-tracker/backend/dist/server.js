@@ -6,14 +6,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const routes_1 = __importDefault(require("./routes"));
+const config_1 = require("./config");
+const database_1 = require("./database");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = Number(process.env.PORT || 8000);
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', service: 'octofit-backend' });
+    res.json({ status: 'ok', service: 'octofit-backend', apiBaseUrl: config_1.apiBaseUrl });
 });
-app.listen(port, '0.0.0.0', () => {
-    console.log(`Backend listening on http://localhost:${port}`);
+app.use('/api', routes_1.default);
+(0, database_1.connectToDatabase)()
+    .then(() => {
+    app.listen(port, '0.0.0.0', () => {
+        console.log(`Backend listening on http://localhost:${port}`);
+        console.log(`API base URL: ${config_1.apiBaseUrl}`);
+    });
+})
+    .catch((error) => {
+    console.error('Database connection failed', error);
+    process.exit(1);
 });
